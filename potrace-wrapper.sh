@@ -38,6 +38,11 @@ if [ $# -lt 1 ]; then
     exit 1
 fi
 
+MAGICK=''
+if $(which magick); then
+    MAGICK='magick '
+fi
+
 # Input file is the last argument:
 input=${!#}
 
@@ -52,7 +57,7 @@ potrace_args=("${@:1:$#-1}")
 # that, we need to specify the new dimensions in PostScript points (1/72 in).
 # FontForge assumes a resolution of 72 DPI (or rather "pixels per inch"), so we
 # can just directly use the pixel dimensions as points:
-wh=($(identify -format '%[width]pt %[height]pt' "${input?}"))
+wh=($(${MAGICK}identify -format '%[width]pt %[height]pt' "${input?}"))
 
 if [ -n "$MKTTF_POTRACE_DEBUG" ]; then
     set -x
@@ -61,7 +66,7 @@ fi
 # NB: We pass "-k 0.9" to Potrace because the bitmaps produced by FontForge are
 # gray for some reason, and we need to make Potrace understand that the gray
 # bits are meant to be black.
-convert "${input?}" -sample '1000%' - \
+${MAGICK}convert "${input?}" -sample '1000%' - \
     | potrace -k 0.9 -W "${wh[0]}" -H "${wh[1]}" "${potrace_args[@]}"
 
 # vim: sw=4 ts=4 et tw=79
